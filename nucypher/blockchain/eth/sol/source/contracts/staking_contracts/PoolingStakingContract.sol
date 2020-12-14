@@ -38,6 +38,8 @@ contract PoolingStakingContract is AbstractStakingContract, Ownable {
     uint256 public ownerWithdrawnETH;
 
     mapping (address => Delegator) public delegators;
+    mapping (address => bool) public canStake;
+
     bool depositIsEnabled = true;
 
     /**
@@ -52,6 +54,14 @@ contract PoolingStakingContract is AbstractStakingContract, Ownable {
     {
         escrow = _router.target().escrow();
         ownerFraction = _ownerFraction;
+    }
+    
+    function enableStaking(addr address) external onlyOwner {
+        canStake[addr] = true;
+    }
+
+    function disableStaking(addr address) external onlyOwner {
+        canStake[addr] = false;
     }
 
     /**
@@ -75,6 +85,7 @@ contract PoolingStakingContract is AbstractStakingContract, Ownable {
     * @param _value Amount of tokens to transfer
     */
     function depositTokens(uint256 _value) external {
+        require(canStake[msg.sender], "Cannot deposit");
         require(depositIsEnabled, "Deposit must be enabled");
         require(_value > 0, "Value must be not empty");
         totalDepositedTokens = totalDepositedTokens.add(_value);
